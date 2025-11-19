@@ -90,8 +90,8 @@ class ChatViewModel extends ChangeNotifier {
 
   // 1. FIX: Method untuk mengirim pesan Teks
   Future<void> sendMessage(String text) async {
-    const groqKey = "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";
-    const geminiKey = "AIzaSyAZGo5j_IzMkrx9H96fpsy2_W5XB515Yko";
+    const groqKey = "xxx";
+    const geminiKey = "xxx";
     
     // Tambahkan pesan pengguna ke chat yang aktif
     _currentChatMessages.add({"role": "user", "type": "text", "text": text});

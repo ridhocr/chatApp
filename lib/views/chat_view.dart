@@ -81,6 +81,7 @@ class _ChatViewState extends State<ChatView> {
             const SizedBox(height: 50),
             const Text(
               "Helpdesk Chat",
+              
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             Padding(
