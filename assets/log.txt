@@ -1,0 +1,3 @@
+Sample log content
+Error: Something happened
+Timestamp: 2025-01-01
