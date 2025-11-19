@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:chatapp_mst/models/chat.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -27,399 +28,332 @@ class _ChatViewState extends State<ChatView> {
 
         return ChangeNotifierProvider<ChatViewModel>(
           create: (context) => ChatViewModel(context),
-          child: Builder(
-            builder: (context) {
-              return Consumer<ChatViewModel>(
-                builder: (context, viewModel, child) {
-                  return Scaffold(
-                    backgroundColor: Colors.white,
-                    body: SafeArea(
-                      child: Row(
-                        children: [
-                          if (!isMobile)
-                            Container(
-                              width: isTablet ? 270 : 350,
-                              decoration: BoxDecoration(
-                                border: Border(
-                                  right: BorderSide(
-                                    color: Colors.grey.shade300,
-                                  ),
-                                ),
-                              ),
-                              child: Column(
-                                children: [
-                                  const SizedBox(height: 50),
-                                  const Text(
-                                    "Helpdesk Chat",
-                                    style: TextStyle(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(12.0),
-                                    child: TextField(
-                                      decoration: InputDecoration(
-                                        hintText: "Search",
-                                        filled: true,
-                                        fillColor: Colors.grey.shade200,
-                                        prefixIcon: const Icon(Icons.search),
-                                        border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            30,
-                                          ),
-                                          borderSide: BorderSide.none,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
+          child: Consumer<ChatViewModel>(
+            builder: (context, viewModel, child) {
+              final Chat activeChat = viewModel.selectedChat;
 
-                                  // ===== Example Chat List (static)
-                                  Expanded(
-                                    child: ListView(
-                                      children: const [
-                                        ListTile(
-                                          leading: CircleAvatar(
-                                            backgroundImage: AssetImage(
-                                              "assets/profile1.png",
-                                            ),
-                                          ),
-                                          title: Text("Cameron Williamson"),
-                                          subtitle: Text("Can’t log in"),
-                                          trailing: Text(
-                                            "Open",
-                                            style: TextStyle(
-                                              color: Colors.green,
-                                            ),
-                                          ),
-                                        ),
-                                        ListTile(
-                                          leading: CircleAvatar(
-                                            backgroundImage: AssetImage(
-                                              "assets/profile2.png",
-                                            ),
-                                          ),
-                                          title: Text("Kristin Watson"),
-                                          subtitle: Text("Error message"),
-                                          trailing: Text("Tue"),
-                                        ),
-                                        ListTile(
-                                          leading: CircleAvatar(
-                                            backgroundImage: AssetImage(
-                                              "assets/profile3.png",
-                                            ),
-                                          ),
-                                          title: Text("Kathryn Murphy"),
-                                          subtitle: Text("Payment issue"),
-                                          trailing: Text("Mon"),
-                                        ),
-                                        ListTile(
-                                          leading: CircleAvatar(
-                                            backgroundImage: AssetImage(
-                                              "assets/profile4.png",
-                                            ),
-                                          ),
-                                          title: Text("Ralph Edwards"),
-                                          subtitle: Text("Account issue"),
-                                          trailing: Text("Mon"),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+              Widget bodyContent;
 
-                          Expanded(
-                            child: Column(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.only(
-                                    left: 14,
-                                    right: 14,
-                                    bottom: 15,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    border: Border(
-                                      bottom: BorderSide(
-                                        color: Colors.grey.shade300,
-                                      ),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      if (isMobile)
-                                        IconButton(
-                                          icon: const Icon(Icons.arrow_back),
-                                          onPressed: () =>
-                                              Navigator.pop(context),
-                                        ),
-
-                                      const CircleAvatar(
-                                        radius: 22,
-                                        backgroundImage: AssetImage(
-                                          "assets/profile1.png",
-                                        ),
-                                      ),
-                                      const SizedBox(width: 14),
-
-                                      const Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              "Cameron Williamson",
-                                              style: TextStyle(
-                                                fontSize: 17,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            Text(
-                                              "Helpdesk Chat",
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                color: Colors.grey,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 6,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.green.shade50,
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
-                                        ),
-                                        child: const Text(
-                                          "Open",
-                                          style: TextStyle(
-                                            color: Colors.green,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-
-                                Expanded(
-                                  child: ListView.builder(
-                                    padding: const EdgeInsets.all(20),
-                                    itemCount: viewModel.messages.length,
-                                    itemBuilder: (context, index) {
-                                      final msg = viewModel.messages[index];
-                                      final bool isUser = msg["role"] == "user";
-
-                                      return Align(
-                                        alignment: isUser
-                                            ? Alignment.centerRight
-                                            : Alignment.centerLeft,
-                                        child: Column(
-                                          crossAxisAlignment: isUser
-                                              ? CrossAxisAlignment.end
-                                              : CrossAxisAlignment.start,
-                                          children: [
-                                            Container(
-                                              constraints: BoxConstraints(
-                                                maxWidth: isDesktop ? 500 : 350,
-                                              ),
-                                              padding: const EdgeInsets.all(14),
-                                              margin: const EdgeInsets.only(
-                                                bottom: 10,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                color: isUser
-                                                    ? Colors.blue
-                                                    : Colors.grey.shade200,
-                                                borderRadius:
-                                                    BorderRadius.circular(14),
-                                              ),
-                                              child: buildMediaBubble(
-                                                msg,
-                                                isUser,
-                                                isDesktop,
-                                              ),
-                                            ),
-                                            Text(
-                                              "9:36 AM",
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.grey.shade600,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 10),
-                                          ],
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 12,
-                                    horizontal: 14,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    border: Border(
-                                      top: BorderSide(
-                                        color: Colors.grey.shade300,
-                                      ),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      GestureDetector(
-                                        onTap: () {
-                                          showModalBottomSheet(
-                                            context: context,
-                                            shape: const RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.vertical(
-                                                    top: Radius.circular(20),
-                                                  ),
-                                            ),
-                                            builder: (ctx) {
-                                              return Padding(
-                                                padding: const EdgeInsets.all(
-                                                  20,
-                                                ),
-                                                child: Column(
-                                                  mainAxisSize:
-                                                      MainAxisSize.min,
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    const Text(
-                                                      "Select Model",
-                                                      style: TextStyle(
-                                                        fontSize: 18,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(height: 20),
-
-                                                    // Groq Option
-                                                    ListTile(
-                                                      leading: const Icon(
-                                                        Icons.memory,
-                                                      ),
-                                                      title: const Text(
-                                                        "Groq (Llama3)",
-                                                      ),
-                                                      trailing:
-                                                          viewModel
-                                                                  .selectedModel ==
-                                                              "groq"
-                                                          ? const Icon(
-                                                              Icons.check,
-                                                              color:
-                                                                  Colors.blue,
-                                                            )
-                                                          : null,
-                                                      onTap: () {
-                                                        viewModel.changeModel(
-                                                          "groq",
-                                                        );
-                                                        Navigator.pop(ctx);
-                                                      },
-                                                    ),
-
-                                                    // Gemini Option
-                                                    ListTile(
-                                                      leading: const Icon(
-                                                        Icons.auto_awesome,
-                                                      ),
-                                                      title: const Text(
-                                                        "Gemini (Flash/Pro)",
-                                                      ),
-                                                      trailing:
-                                                          viewModel
-                                                                  .selectedModel ==
-                                                              "gemini"
-                                                          ? const Icon(
-                                                              Icons.check,
-                                                              color:
-                                                                  Colors.blue,
-                                                            )
-                                                          : null,
-                                                      onTap: () {
-                                                        viewModel.changeModel(
-                                                          "gemini",
-                                                        );
-                                                        Navigator.pop(ctx);
-                                                      },
-                                                    ),
-                                                  ],
-                                                ),
-                                              );
-                                            },
-                                          );
-                                        },
-                                        child: Icon(Icons.add_circle_outline),
-                                      ),
-
-                                      SizedBox(width: 10),
-
-                                      GestureDetector(
-                                        child: const Icon(Icons.attach_file),
-                                        onTap: () =>
-                                            showUploadMenu(context, viewModel),
-                                      ),
-
-                                      SizedBox(width: 10),
-
-                                      Expanded(
-                                        child: TextField(
-                                          controller: controller,
-                                          decoration: InputDecoration(
-                                            hintText: "Message",
-                                            border: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(15),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-
-                                      SizedBox(width: 10),
-
-                                      GestureDetector(
-                                        child: const Icon(Icons.send),
-                                        onTap: () {
-                                          final text = controller.text.trim();
-                                          if (text.isNotEmpty) {
-                                            controller.clear();
-                                            context
-                                                .read<ChatViewModel>()
-                                                .sendMessage(text);
-                                          }
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+              if (isMobile) {
+                if (viewModel.isChatDetailVisibleOnMobile) {
+                  bodyContent = _buildChatDetail(
+                    viewModel,
+                    activeChat,
+                    isMobile,
+                    isDesktop,
+                  );
+                } else {
+                  bodyContent = _buildChatList(viewModel, isMobile, isTablet);
+                }
+              } else {
+                bodyContent = Row(
+                  children: [
+                    _buildChatList(viewModel, isMobile, isTablet),
+                    Expanded(
+                      child: _buildChatDetail(
+                        viewModel,
+                        activeChat,
+                        isMobile,
+                        isDesktop,
                       ),
                     ),
-                  );
-                },
-              );
+                  ],
+                );
+              }
+
+              return Scaffold(backgroundColor: Colors.white, body: bodyContent);
             },
           ),
         );
       },
+    );
+  }
+
+  Widget _buildChatList(ChatViewModel viewModel, bool isMobile, bool isTablet) {
+    return SafeArea(
+      child: Container(
+        width: isMobile ? double.infinity : (isTablet ? 270 : 350),
+        decoration: BoxDecoration(
+          border: Border(right: BorderSide(color: Colors.grey.shade300)),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 50),
+            const Text(
+              "Helpdesk Chat",
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: "Search",
+                  filled: true,
+                  fillColor: Colors.grey.shade200,
+                  prefixIcon: const Icon(Icons.search),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              child: ListView.builder(
+                itemCount: viewModel.chatList.length,
+                itemBuilder: (context, index) {
+                  final chat = viewModel.chatList[index];
+                  final bool isSelected = index == viewModel.selectedChatIndex;
+
+                  return ListTile(
+                    onTap: () {
+                      viewModel.selectChat(index);
+                    },
+                    tileColor: isSelected ? Colors.blue.shade50 : null,
+                    leading: CircleAvatar(
+                      backgroundImage: AssetImage(chat.profileAsset),
+                    ),
+                    title: Text(chat.name),
+                    subtitle: Text(chat.lastMessage),
+                    trailing: Text(
+                      chat.statusOrTime,
+                      style: TextStyle(
+                        color: chat.isOpen ? Colors.green : Colors.grey,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChatDetail(
+    ChatViewModel viewModel,
+    Chat activeChat,
+    bool isMobile,
+    bool isDesktop,
+  ) {
+    return SafeArea(
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.only(left: 14, right: 14, bottom: 15),
+            decoration: BoxDecoration(
+              border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
+            ),
+            child: Row(
+              children: [
+                if (isMobile)
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () => viewModel.backToChatList(),
+                  ),
+
+                CircleAvatar(
+                  radius: 22,
+                  backgroundImage: AssetImage(activeChat.profileAsset),
+                ),
+                const SizedBox(width: 14),
+
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        activeChat.name, 
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Text(
+                        "Helpdesk Chat",
+                        style: TextStyle(fontSize: 14, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    "Open",
+                    style: TextStyle(
+                      color: Colors.green,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(20),
+              itemCount: activeChat.messages.length,
+              itemBuilder: (context, index) {
+                final msg = activeChat.messages[index];
+                // final bool isUser = msg["role"] == "user";
+
+                final bool isUserMessage = (msg["role"] ?? 'model') == "user";
+
+                return Align(
+                  alignment: isUserMessage
+                      ? Alignment.centerRight
+                      : Alignment.centerLeft,
+                  child: Column(
+                    crossAxisAlignment: isUserMessage
+                        ? CrossAxisAlignment.end
+                        : CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        constraints: BoxConstraints(
+                          maxWidth: isDesktop ? 500 : 350,
+                        ),
+                        padding: const EdgeInsets.all(14),
+                        margin: const EdgeInsets.only(bottom: 10),
+                        decoration: BoxDecoration(
+                          color: isUserMessage
+                              ? Colors.blue
+                              : Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: buildMediaBubble(msg, isUserMessage, isDesktop),
+                      ),
+                      Text(
+                        "9:36 AM", 
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+            decoration: BoxDecoration(
+              border: Border(top: BorderSide(color: Colors.grey.shade300)),
+            ),
+            child: Row(
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    showModalBottomSheet(
+                      context: context,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(20),
+                        ),
+                      ),
+                      builder: (ctx) {
+                        return Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "Select Model",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+
+                              ListTile(
+                                leading: const Icon(Icons.memory),
+                                title: const Text("Groq (Llama3)"),
+                                trailing: viewModel.selectedModel == "groq"
+                                    ? const Icon(
+                                        Icons.check,
+                                        color: Colors.blue,
+                                      )
+                                    : null,
+                                onTap: () {
+                                  viewModel.changeModel("groq");
+                                  Navigator.pop(ctx);
+                                },
+                              ),
+
+                              ListTile(
+                                leading: const Icon(Icons.auto_awesome),
+                                title: const Text("Gemini (Flash/Pro)"),
+                                trailing: viewModel.selectedModel == "gemini"
+                                    ? const Icon(
+                                        Icons.check,
+                                        color: Colors.blue,
+                                      )
+                                    : null,
+                                onTap: () {
+                                  viewModel.changeModel("gemini");
+                                  Navigator.pop(ctx);
+                                },
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  },
+                  child: const Icon(Icons.add_circle_outline),
+                ),
+
+                const SizedBox(width: 10),
+
+                GestureDetector(
+                  child: const Icon(Icons.attach_file),
+                  onTap: () => showUploadMenu(context, viewModel),
+                ),
+
+                const SizedBox(width: 10),
+
+                Expanded(
+                  child: TextField(
+                    controller: controller,
+                    decoration: InputDecoration(
+                      hintText: "Message",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 10),
+
+                GestureDetector(
+                  child: const Icon(Icons.send),
+                  onTap: () {
+                    final text = controller.text.trim();
+                    if (text.isNotEmpty) {
+                      controller.clear();
+                      viewModel.sendMessage(text);
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -484,7 +418,7 @@ class _ChatViewState extends State<ChatView> {
         return ClipRRect(
           borderRadius: BorderRadius.circular(12),
           child: Image.asset(
-            msg["fileUrl"],
+            msg["fileUrl"] ?? "assets/placeholder.png",
             width: isDesktop ? 250 : 180,
             fit: BoxFit.cover,
           ),
@@ -499,16 +433,15 @@ class _ChatViewState extends State<ChatView> {
           ),
           child: Stack(
             children: [
-              // thumbnail image
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: Image.asset(
-                  msg["thumbnail"],
+                  msg["thumbnail"] ??
+                      "assets/placeholder.png", 
                   width: double.infinity,
                   fit: BoxFit.cover,
                 ),
               ),
-              // play button
               const Positioned.fill(
                 child: Center(
                   child: CircleAvatar(
@@ -517,7 +450,6 @@ class _ChatViewState extends State<ChatView> {
                   ),
                 ),
               ),
-              // duration bottom right
               Positioned(
                 bottom: 6,
                 right: 6,
