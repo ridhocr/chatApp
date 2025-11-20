@@ -1,5 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'dart:io';
+
 import 'package:chatapp_mst/models/chat.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -16,45 +18,53 @@ class ChatView extends StatefulWidget {
 
 class _ChatViewState extends State<ChatView> {
   final TextEditingController controller = TextEditingController();
+  final TextEditingController searchController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final bool isMobile = constraints.maxWidth < 600;
-        final bool isTablet =
-            constraints.maxWidth >= 600 && constraints.maxWidth < 1024;
-        final bool isDesktop = constraints.maxWidth >= 1024;
-
         return ChangeNotifierProvider<ChatViewModel>(
           create: (context) => ChatViewModel(context),
           child: Consumer<ChatViewModel>(
             builder: (context, viewModel, child) {
+              viewModel.isMobile = constraints.maxWidth < 600;
+              viewModel.isTablet =
+                  constraints.maxWidth >= 600 && constraints.maxWidth < 1024;
+              viewModel.isDesktop = constraints.maxWidth >= 1024;
               final Chat activeChat = viewModel.selectedChat;
 
               Widget bodyContent;
 
-              if (isMobile) {
+              if (viewModel.isMobile!) {
                 if (viewModel.isChatDetailVisibleOnMobile) {
                   bodyContent = _buildChatDetail(
                     viewModel,
                     activeChat,
-                    isMobile,
-                    isDesktop,
+                    viewModel.isMobile!,
+                    viewModel.isDesktop!,
                   );
                 } else {
-                  bodyContent = _buildChatList(viewModel, isMobile, isTablet);
+                  bodyContent = _buildChatList(
+                    viewModel,
+                    viewModel.isMobile!,
+                    viewModel.isTablet!,
+                  );
                 }
               } else {
                 bodyContent = Row(
                   children: [
-                    _buildChatList(viewModel, isMobile, isTablet),
+                    _buildChatList(
+                      viewModel,
+                      viewModel.isMobile!,
+                      viewModel.isTablet!,
+                    ),
                     Expanded(
                       child: _buildChatDetail(
                         viewModel,
                         activeChat,
-                        isMobile,
-                        isDesktop,
+                        viewModel.isMobile!,
+                        viewModel.isDesktop!,
                       ),
                     ),
                   ],
@@ -81,12 +91,16 @@ class _ChatViewState extends State<ChatView> {
             const SizedBox(height: 50),
             const Text(
               "Helpdesk Chat",
-              
+
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             Padding(
               padding: const EdgeInsets.all(12.0),
               child: TextField(
+                controller: searchController,
+                onChanged: (value) {
+                  viewModel.setSearchQuery(value);
+                },
                 decoration: InputDecoration(
                   hintText: "Search",
                   filled: true,
@@ -104,7 +118,7 @@ class _ChatViewState extends State<ChatView> {
                 itemCount: viewModel.chatList.length,
                 itemBuilder: (context, index) {
                   final chat = viewModel.chatList[index];
-                  final bool isSelected = index == viewModel.selectedChatIndex;
+                  final bool isSelected = chat == viewModel.selectedChat;
 
                   return ListTile(
                     onTap: () {
@@ -115,7 +129,11 @@ class _ChatViewState extends State<ChatView> {
                       backgroundImage: AssetImage(chat.profileAsset),
                     ),
                     title: Text(chat.name),
-                    subtitle: Text(chat.lastMessage),
+                    subtitle: Text(
+                      chat.lastMessage,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     trailing: Text(
                       chat.statusOrTime,
                       style: TextStyle(
@@ -141,111 +159,162 @@ class _ChatViewState extends State<ChatView> {
     return SafeArea(
       child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.only(left: 14, right: 14, bottom: 15),
-            decoration: BoxDecoration(
-              border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
-            ),
-            child: Row(
-              children: [
-                if (isMobile)
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    onPressed: () => viewModel.backToChatList(),
-                  ),
-
-                CircleAvatar(
-                  radius: 22,
-                  backgroundImage: AssetImage(activeChat.profileAsset),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.only(
+                  left: 14,
+                  right: 14,
+                  top: 10,
+                  bottom: 10,
                 ),
-                const SizedBox(width: 14),
-
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        activeChat.name, 
-                        style: const TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
+                decoration: BoxDecoration(
+                  color: const Color.fromARGB(255, 238, 252, 250),
+                  border: Border(
+                    bottom: BorderSide(color: Colors.grey.shade300),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    if (isMobile)
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back),
+                        onPressed: () => viewModel.backToChatList(),
+                      )
+                    else
+                      const SizedBox(width: 48),
+                    const Expanded(
+                      child: Center(
+                        child: Text(
+                          "Helpdesk Chat",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                      const Text(
-                        "Helpdesk Chat",
-                        style: TextStyle(fontSize: 14, color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.green.shade50,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text(
-                    "Open",
-                    style: TextStyle(
-                      color: Colors.green,
-                      fontWeight: FontWeight.bold,
                     ),
+
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.teal.shade400,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        "Open",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              Container(
+                padding: EdgeInsets.only(
+                  right: 14,
+                  left: viewModel.isMobile! ? 0 : 14,
+                  top: 10,
+                  bottom: 15,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color.fromARGB(255, 248, 255, 254),
+                  border: Border(
+                    bottom: BorderSide(color: Colors.grey.shade300),
                   ),
                 ),
-              ],
-            ),
+                child: Row(
+                  children: [
+                    if (isMobile) const SizedBox(width: 14),
+                    CircleAvatar(
+                      radius: 22,
+                      backgroundImage: AssetImage(activeChat.profileAsset),
+                    ),
+                    const SizedBox(width: 14),
+
+                    Text(
+                      activeChat.name,
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
 
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(20),
-              itemCount: activeChat.messages.length,
-              itemBuilder: (context, index) {
-                final msg = activeChat.messages[index];
-                // final bool isUser = msg["role"] == "user";
+            child: Container(
+              color: const Color.fromARGB(255, 248, 255, 254),
+              child: ListView.builder(
+                padding: const EdgeInsets.all(20),
+                itemCount: activeChat.messages.length,
+                itemBuilder: (context, index) {
+                  final msg = activeChat.messages[index];
+                  // final bool isUser = msg["role"] == "user";
 
-                final bool isUserMessage = (msg["role"] ?? 'model') == "user";
+                  final bool isUserMessage = (msg["role"] ?? 'model') == "user";
 
-                return Align(
-                  alignment: isUserMessage
-                      ? Alignment.centerRight
-                      : Alignment.centerLeft,
-                  child: Column(
-                    crossAxisAlignment: isUserMessage
-                        ? CrossAxisAlignment.end
-                        : CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        constraints: BoxConstraints(
-                          maxWidth: isDesktop ? 500 : 350,
+                  return Align(
+                    alignment: isUserMessage
+                        ? Alignment.centerRight
+                        : Alignment.centerLeft,
+                    child: Column(
+                      crossAxisAlignment: isUserMessage
+                          ? CrossAxisAlignment.end
+                          : CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          constraints: BoxConstraints(
+                            maxWidth: isDesktop ? 500 : 350,
+                          ),
+                          padding:
+                              msg["type"] == "image" ||
+                                  msg["type"] == "video" ||
+                                  msg["type"] == "file"
+                              ? EdgeInsets.zero
+                              : const EdgeInsets.all(14),
+                          margin: const EdgeInsets.only(bottom: 10),
+                          decoration: BoxDecoration(
+                            color: isUserMessage
+                                ? Colors.blue
+                                : Colors.grey.shade200,
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: buildMediaBubble(
+                            msg,
+                            isUserMessage,
+                            isDesktop,
+                          ),
                         ),
-                        padding: const EdgeInsets.all(14),
-                        margin: const EdgeInsets.only(bottom: 10),
-                        decoration: BoxDecoration(
-                          color: isUserMessage
-                              ? Colors.blue
-                              : Colors.grey.shade200,
-                          borderRadius: BorderRadius.circular(14),
+                        Text(
+                          activeChat.timeMessage,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
                         ),
-                        child: buildMediaBubble(msg, isUserMessage, isDesktop),
-                      ),
-                      Text(
-                        "9:36 AM", 
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                    ],
-                  ),
-                );
-              },
+                        const SizedBox(height: 10),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
           ),
+
+          if (viewModel.isLoading) _buildLoadingIndicator(isMobile, isDesktop),
 
           Container(
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
@@ -329,6 +398,7 @@ class _ChatViewState extends State<ChatView> {
                 Expanded(
                   child: TextField(
                     controller: controller,
+                    textInputAction: TextInputAction.send,
                     decoration: InputDecoration(
                       hintText: "Message",
                       border: OutlineInputBorder(
@@ -354,6 +424,19 @@ class _ChatViewState extends State<ChatView> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLoadingIndicator(bool isMobile, bool isDesktop) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+        child: const Text(
+          "AI is typing...",
+          style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey),
+        ),
       ),
     );
   }
@@ -416,16 +499,89 @@ class _ChatViewState extends State<ChatView> {
 
     switch (type) {
       case "image":
+        final fileUrl = msg["fileUrl"] ?? "assets/placeholder.png";
+
+        Widget imageWidget;
+
+        if (fileUrl.startsWith('assets/') ||
+            fileUrl == "assets/placeholder.png") {
+          imageWidget = Image.asset(
+            fileUrl,
+            width: isDesktop ? 250 : 180,
+            fit: BoxFit.contain,
+          );
+        } else if (fileUrl.startsWith('blob:') || fileUrl.startsWith('http')) {
+          imageWidget = Image.network(
+            fileUrl,
+            width: isDesktop ? 250 : 180,
+            fit: BoxFit.contain,
+          );
+        } else if (File(fileUrl).existsSync()) {
+          imageWidget = Image.file(
+            File(fileUrl),
+            width: isDesktop ? 250 : 180,
+            fit: BoxFit.contain,
+          );
+        } else {
+          imageWidget = Container(
+            width: isDesktop ? 250 : 180,
+            height: isDesktop ? 150 : 120,
+            color: Colors.grey.shade300,
+            child: Center(
+              child: Icon(
+                Icons.broken_image,
+                color: Colors.grey.shade600,
+                size: 40,
+              ),
+            ),
+          );
+        }
+
         return ClipRRect(
           borderRadius: BorderRadius.circular(12),
-          child: Image.asset(
-            msg["fileUrl"] ?? "assets/placeholder.png",
-            width: isDesktop ? 250 : 180,
-            fit: BoxFit.cover,
-          ),
+          child: imageWidget,
         );
 
       case "video":
+        final thumbnailPath = msg["videoUrl"] ?? "assets/placeholder.png";
+        Widget thumbnailWidget;
+
+        if (thumbnailPath.startsWith('assets/')) {
+          thumbnailWidget = Image.asset(
+            thumbnailPath,
+            width: double.infinity,
+            fit: BoxFit.cover,
+          );
+        } else if (thumbnailPath.startsWith('blob:') ||
+            thumbnailPath.startsWith('http')) {
+          thumbnailWidget = Image.network(
+            thumbnailPath,
+            width: isDesktop ? 250 : 180,
+            fit: BoxFit.contain,
+          );
+        } else {
+          try {
+            thumbnailWidget = Image.file(
+              File(thumbnailPath),
+              width: double.infinity,
+              fit: BoxFit.cover,
+            );
+          } catch (e) {
+            thumbnailWidget = Container(
+              width: double.infinity,
+              height: 150,
+              color: Colors.grey.shade300,
+              child: Center(
+                child: Icon(
+                  Icons.broken_image,
+                  color: Colors.grey.shade600,
+                  size: 40,
+                ),
+              ),
+            );
+          }
+        }
+
         return Container(
           width: isDesktop ? 280 : 200,
           decoration: BoxDecoration(
@@ -436,12 +592,7 @@ class _ChatViewState extends State<ChatView> {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.asset(
-                  msg["thumbnail"] ??
-                      "assets/placeholder.png", 
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
+                child: thumbnailWidget,
               ),
               const Positioned.fill(
                 child: Center(

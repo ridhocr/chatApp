@@ -3,6 +3,7 @@ class Chat {
   final String profileAsset;
   final String lastMessage;
   final String statusOrTime;
+  final String timeMessage;
   final bool isOpen;
   final List<Map<String, dynamic>> messages; 
 
@@ -11,16 +12,18 @@ class Chat {
     required this.profileAsset,
     required this.lastMessage,
     required this.statusOrTime,
+    required this.timeMessage,
     this.isOpen = false,
     required this.messages,
   });
 
-  Chat copyWith({String? lastMessage}) {
+  Chat copyWith({String? lastMessage, String? timeMessage}) {
     return Chat(
       name: name,
       profileAsset: profileAsset,
       lastMessage: lastMessage ?? this.lastMessage,
       statusOrTime: statusOrTime,
+      timeMessage: timeMessage ?? this.timeMessage,
       isOpen: isOpen,
       messages: messages,
     );
